@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const skip = (page - 1) * limit
 
-    const [allToggles, total] = await Promise.all([
+    const [rawToggles, total] = await Promise.all([
       prisma.toggle.findMany({
         skip,
         take: limit,
@@ -32,8 +32,14 @@ export async function GET(request: NextRequest) {
       prisma.toggle.count()
     ])
 
-    // Filter out toggles with null user
-    const toggles = allToggles.filter(toggle => toggle.user !== null)
+    // Add fallback user for toggles without user relation
+    const toggles = rawToggles.map(toggle => ({
+      ...toggle,
+      user: toggle.user || {
+        name: 'System User',
+        email: 'system@feature-toggle.app'
+      }
+    }))
 
     const response: ApiResponse = {
       success: true,
