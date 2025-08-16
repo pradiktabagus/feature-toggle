@@ -25,11 +25,22 @@ export async function GET(request: NextRequest) {
             },
           },
         },
+        where: {
+          user: {
+            isNot: null
+          }
+        },
         orderBy: {
           createdAt: 'desc',
         },
       }),
-      prisma.toggle.count()
+      prisma.toggle.count({
+        where: {
+          user: {
+            isNot: null
+          }
+        }
+      })
     ])
 
     const response: ApiResponse = {
