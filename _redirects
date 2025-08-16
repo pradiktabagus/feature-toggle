@@ -1,0 +1,5 @@
+# Redirect all API routes to external API (if using hybrid approach)
+# /api/* https://your-api-domain.vercel.app/api/:splat 200
+
+# SPA fallback for client-side routing
+/* /index.html 200
