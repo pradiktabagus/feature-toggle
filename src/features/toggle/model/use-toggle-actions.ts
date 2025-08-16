@@ -45,8 +45,6 @@ export const useToggleActions = (onCreateSuccess?: () => void) => {
   }
 
   const handleDelete = async (toggle: ToggleData) => {
-    if (!confirm(`Are you sure you want to delete "${toggle.name}"?`)) return
-    
     try {
       await deleteToggleMutation.mutateAsync(String(toggle.id))
       console.log('Toggle deleted successfully')
