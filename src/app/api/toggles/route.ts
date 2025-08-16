@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const skip = (page - 1) * limit
 
-    const [toggles, total] = await Promise.all([
+    const [allToggles, total] = await Promise.all([
       prisma.toggle.findMany({
         skip,
         take: limit,
@@ -25,23 +25,15 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        where: {
-          user: {
-            isNot: null
-          }
-        },
         orderBy: {
           createdAt: 'desc',
         },
       }),
-      prisma.toggle.count({
-        where: {
-          user: {
-            isNot: null
-          }
-        }
-      })
+      prisma.toggle.count()
     ])
+
+    // Filter out toggles with null user
+    const toggles = allToggles.filter(toggle => toggle.user !== null)
 
     const response: ApiResponse = {
       success: true,
