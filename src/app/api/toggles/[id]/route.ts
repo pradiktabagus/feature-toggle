@@ -54,6 +54,10 @@ export async function PATCH(
       })
     }
 
+    // Auto export to S3
+    const { autoExportToggles } = await import('@/shared/lib/auto-export')
+    autoExportToggles(session.user.email).catch(console.error)
+
     const response: ApiResponse = {
       success: true,
       message: 'Toggle status updated successfully',
@@ -98,6 +102,10 @@ export async function DELETE(
     await prisma.toggle.delete({
       where: { id: id }
     })
+
+    // Auto export to S3
+    const { autoExportToggles } = await import('@/shared/lib/auto-export')
+    autoExportToggles(session.user.email).catch(console.error)
 
     const response: ApiResponse = {
       success: true,
@@ -173,6 +181,10 @@ export async function PUT(
         data: { updatedBy: currentUser.id } as any
       })
     }
+
+    // Auto export to S3
+    const { autoExportToggles } = await import('@/shared/lib/auto-export')
+    autoExportToggles(session.user.email).catch(console.error)
 
     const response: ApiResponse = {
       success: true,
