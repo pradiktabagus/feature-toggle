@@ -13,6 +13,10 @@ A modern, full-stack feature toggle management system built with Next.js, TypeSc
 - 📊 **JSON Editor**: CodeMirror integration for complex values
 - 🛡️ **Type Safe**: Full TypeScript coverage
 - 🗄️ **Database**: MongoDB with Prisma ORM
+- ☁️ **CloudFront CDN**: Global edge caching for public API
+- 🚀 **S3 Integration**: File storage and cache management
+- ⚡ **Auto-Invalidation**: Instant cache updates on toggle changes
+- 📈 **Cache Analytics**: CloudFront hit/miss monitoring
 
 ## 🛠️ Tech Stack
 
@@ -24,6 +28,9 @@ A modern, full-stack feature toggle management system built with Next.js, TypeSc
 - **UI**: shadcn/ui + Tailwind CSS
 - **Package Manager**: Bun
 - **Deployment**: Vercel
+- **CDN**: AWS CloudFront
+- **Storage**: AWS S3
+- **Cache**: CloudFront + S3 hybrid caching
 
 ## 📋 Prerequisites
 
@@ -32,6 +39,9 @@ A modern, full-stack feature toggle management system built with Next.js, TypeSc
 2. **Google OAuth App** - Authentication provider
 3. **GitHub OAuth App** - Authentication provider
 4. **Vercel Account** - Deployment platform
+5. **AWS Account** - S3 storage and CloudFront CDN
+6. **AWS S3 Bucket** - File storage and caching
+7. **AWS CloudFront Distribution** - Global CDN
 
 ### Development Tools
 - Node.js 18+ or Bun
@@ -74,6 +84,19 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 # GitHub OAuth
 GITHUB_ID="your-github-client-id"
 GITHUB_SECRET="your-github-client-secret"
+
+# AWS Configuration
+AWS_ACCESS_KEY_ID="your-aws-access-key"
+AWS_SECRET_ACCESS_KEY="your-aws-secret-key"
+AWS_REGION="us-east-1"
+AWS_S3_BUCKET="your-s3-bucket-name"
+
+# CloudFront Configuration
+CLOUDFRONT_DISTRIBUTION_ID="your-cloudfront-distribution-id"
+
+# Cache Configuration (in seconds)
+BROWSER_CACHE_SECONDS=300      # Browser cache: 5 minutes
+CLOUDFRONT_CACHE_SECONDS=3600  # CloudFront cache: 1 hour
 ```
 
 ### 4. Database Setup
@@ -92,7 +115,40 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 🔧 Configuration Guide
+## 📄 Configuration Files
+
+### Core Configuration
+- **`package.json`** - Dependencies, scripts, and project metadata
+- **`tsconfig.json`** - TypeScript compiler configuration
+- **`next.config.ts`** - Next.js framework configuration
+- **`tailwind.config.ts`** - Tailwind CSS styling configuration
+- **`prisma/schema.prisma`** - Database schema and ORM configuration
+
+### UI & Components
+- **`components.json`** - shadcn/ui component library configuration
+  - Defines component paths and aliases
+  - Sets up Tailwind integration
+  - Configures icon library (Lucide)
+
+### Deployment & Infrastructure
+- **`vercel.json`** - Vercel deployment configuration
+  - Sets API function timeout (30s)
+  - Optimizes serverless function performance
+- **`aws-iam-policy.json`** - AWS IAM permissions template
+  - S3 bucket access (read/write/delete)
+  - CloudFront invalidation permissions
+  - Use this to create IAM policy in AWS Console
+
+### Environment Files
+- **`.env.local`** - Local development environment variables
+- **`.env.example`** - Template for required environment variables
+- **`.gitignore`** - Files and folders excluded from Git
+
+### Development Tools
+- **`.eslintrc.json`** - Code linting rules and configuration
+- **`bun.lockb`** - Dependency lock file for Bun package manager
+
+## 🔧 Setup Guide
 
 ### MongoDB Atlas Setup
 1. Create account at [MongoDB Atlas](https://www.mongodb.com/atlas)
@@ -115,6 +171,13 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 3. Set Authorization callback URL:
    - Development: `http://localhost:3000/api/auth/callback/github`
    - Production: `https://your-domain.com/api/auth/callback/github`
+
+### AWS Setup
+1. Create AWS account and get access keys
+2. Create S3 bucket for file storage
+3. Create CloudFront distribution pointing to your API
+4. Set up IAM permissions for S3 and CloudFront access
+5. Configure CloudFront to cache `/api/public/toggles/*` paths
 
 ## 📦 Available Scripts
 
@@ -178,11 +241,18 @@ Connect your GitHub repository to Vercel for automatic deployments on every push
 5. Save and manage your toggles
 
 ### API Endpoints
-- `GET /api/toggles` - List all toggles
-- `POST /api/toggles` - Create new toggle
-- `PUT /api/toggles/[id]` - Update toggle
-- `DELETE /api/toggles/[id]` - Delete toggle
-- `GET /api/public/toggles/[key]` - Get toggle by key (public)
+- `GET /api/toggles` - List all toggles (admin)
+- `POST /api/toggles` - Create new toggle (admin)
+- `PUT /api/toggles/[id]` - Update toggle (admin)
+- `DELETE /api/toggles/[id]` - Delete toggle (admin)
+- `GET /api/public/toggles/[key]` - Get toggle by key (public, cached)
+- `POST /api/files` - Upload files to S3 (admin)
+
+### Caching Strategy
+- **Public API**: Cached via CloudFront + S3 hybrid
+- **Auto-Invalidation**: Cache cleared on toggle updates
+- **Cache Headers**: Configurable via environment variables
+- **Monitoring**: CloudFront hit/miss tracking in response headers
 
 ## 🔒 Security Features
 
@@ -191,6 +261,9 @@ Connect your GitHub repository to Vercel for automatic deployments on every push
 - ✅ Input validation with Zod schemas
 - ✅ Type-safe database operations
 - ✅ Environment variable security
+- ✅ AWS IAM permissions for S3/CloudFront
+- ✅ Public API rate limiting via CloudFront
+- ✅ Secure file uploads to S3
 
 ## 🤝 Contributing
 
