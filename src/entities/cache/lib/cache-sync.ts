@@ -1,5 +1,5 @@
-import { prisma } from './prisma'
-import { uploadToggleFile, deleteToggleFile } from './s3'
+import { prisma } from '@/shared/lib/prisma'
+import { uploadToggleFile, deleteToggleFile } from '@/shared/lib/s3'
 import { CloudFrontClient, CreateInvalidationCommand } from '@aws-sdk/client-cloudfront'
 
 const cloudfront = new CloudFrontClient({

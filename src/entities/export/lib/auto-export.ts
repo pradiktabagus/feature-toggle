@@ -1,5 +1,5 @@
-import { prisma } from './prisma'
-import { uploadToggleFile } from './s3'
+import { prisma } from '@/shared/lib/prisma'
+import { uploadToggleFile } from '@/shared/lib/s3'
 
 export async function autoExportToggles(userEmail: string) {
   try {
@@ -16,7 +16,7 @@ export async function autoExportToggles(userEmail: string) {
     const exportData = {
       exportedAt: new Date().toISOString(),
       exportedBy: userEmail,
-      toggles: toggles.map(toggle => ({
+      toggles: toggles.map((toggle) => ({
         name: toggle.name,
         description: toggle.description,
         value: toggle.value,

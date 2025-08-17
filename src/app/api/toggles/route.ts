@@ -139,11 +139,11 @@ export async function POST(request: NextRequest) {
     })
 
     // Sync to cache
-    const { syncToggleToCache } = await import('@/shared/lib/cache-sync')
+    const { syncToggleToCache } = await import('@/entities/cache')
     syncToggleToCache(toggle.key).catch(console.error)
 
     // Auto export to S3
-    const { autoExportToggles } = await import('@/shared/lib/auto-export')
+    const { autoExportToggles } = await import('@/entities/export')
     autoExportToggles(session.user.email).catch(console.error)
 
     const response: ApiResponse = {
