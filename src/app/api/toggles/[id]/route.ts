@@ -58,6 +58,11 @@ export async function PATCH(
     const { autoExportToggles } = await import('@/shared/lib/auto-export')
     autoExportToggles(session.user.email).catch(console.error)
 
+    // Invalidate cache
+    const { cache } = await import('@/shared/lib/cache')
+    cache.clear()
+    cache.delete(`toggle:${toggle.key}`)
+
     const response: ApiResponse = {
       success: true,
       message: 'Toggle status updated successfully',
@@ -106,6 +111,10 @@ export async function DELETE(
     // Auto export to S3
     const { autoExportToggles } = await import('@/shared/lib/auto-export')
     autoExportToggles(session.user.email).catch(console.error)
+
+    // Invalidate cache
+    const { cache } = await import('@/shared/lib/cache')
+    cache.clear()
 
     const response: ApiResponse = {
       success: true,
@@ -185,6 +194,11 @@ export async function PUT(
     // Auto export to S3
     const { autoExportToggles } = await import('@/shared/lib/auto-export')
     autoExportToggles(session.user.email).catch(console.error)
+
+    // Invalidate cache
+    const { cache } = await import('@/shared/lib/cache')
+    cache.clear()
+    cache.delete(`toggle:${toggle.key}`)
 
     const response: ApiResponse = {
       success: true,

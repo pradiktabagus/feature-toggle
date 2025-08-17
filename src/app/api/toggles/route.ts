@@ -5,6 +5,7 @@ import { prisma } from '@/shared/lib/prisma'
 import { CreateToggleRequest } from '@/shared/api'
 import { v4 as uuidv4 } from 'uuid'
 import { ApiResponse } from '@/shared/types/api-response'
+import { cache } from '@/shared/lib/cache'
 
 
 export async function GET(request: NextRequest) {
@@ -13,6 +14,14 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
     const skip = (page - 1) * limit
+
+    // Check cache first
+    const cacheKey = `toggles:${page}:${limit}`
+    const cachedData = cache.get(cacheKey)
+    
+    if (cachedData) {
+      return NextResponse.json(cachedData)
+    }
 
     const [rawToggles, total] = await Promise.all([
       prisma.toggle.findMany({
@@ -64,6 +73,9 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit)
       }
     }
+    
+    // Cache the response for 2 minutes
+    cache.set(cacheKey, response, 2 * 60 * 1000)
     
     return NextResponse.json(response)
   } catch (error) {
@@ -141,6 +153,9 @@ export async function POST(request: NextRequest) {
     // Auto export to S3
     const { autoExportToggles } = await import('@/shared/lib/auto-export')
     autoExportToggles(session.user.email).catch(console.error)
+
+    // Invalidate cache
+    cache.clear()
 
     const response: ApiResponse = {
       success: true,

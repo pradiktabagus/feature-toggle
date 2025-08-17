@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/shared/lib/prisma'
+import { cache } from '@/shared/lib/cache'
+import { ApiResponse } from '@/shared/types/api-response'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ key: string }> }
 ) {
-  const { key } = await params
   try {
-    const toggle = await prisma.toggle.findFirst({
-      where: { 
-        key: key,
-        isActive: true // Only return active toggles
-      },
+    const { key } = await params
+    
+    // Check cache first
+    const cacheKey = `toggle:${key}`
+    const cachedToggle = cache.get(cacheKey)
+    
+    if (cachedToggle) {
+      return NextResponse.json(cachedToggle)
+    }
+
+    const toggle = await prisma.toggle.findUnique({
+      where: { key },
       select: {
         key: true,
         name: true,
@@ -22,41 +30,40 @@ export async function GET(
     })
 
     if (!toggle) {
-      return NextResponse.json({
-        enabled: false,
-        value: null,
-        message: 'Toggle not found or inactive'
-      }, { status: 404 })
-    }
-
-    // Parse value based on type
-    let parsedValue = toggle.value
-    try {
-      const valueStr = String(toggle.value)
-      if (toggle.type === 'JSON') {
-        parsedValue = JSON.parse(valueStr)
-      } else if (toggle.type === 'BOOLEAN') {
-        parsedValue = valueStr === 'true' || toggle.value === true
-      } else if (toggle.type === 'NUMBER') {
-        parsedValue = Number(valueStr)
+      const response: ApiResponse = {
+        success: false,
+        message: 'Toggle not found',
+        error: { code: 'NOT_FOUND' }
       }
-    } catch (error) {
-      console.error('Failed to parse toggle value:', error)
+      return NextResponse.json(response, { status: 404 })
     }
 
-    return NextResponse.json({
-      enabled: true,
-      key: toggle.key,
-      name: toggle.name,
-      value: parsedValue,
-      type: toggle.type
+    const response: ApiResponse = {
+      success: true,
+      message: 'Toggle retrieved successfully',
+      data: toggle
+    }
+    
+    // Cache for 5 minutes
+    cache.set(cacheKey, response, 5 * 60 * 1000)
+    
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, max-age=300, s-maxage=300', // 5 minutes
+        'CDN-Cache-Control': 'max-age=300',
+        'Vercel-CDN-Cache-Control': 'max-age=300'
+      }
     })
   } catch (error) {
-    console.error('Public API error:', error)
-    return NextResponse.json({
-      enabled: false,
-      value: null,
-      message: 'Internal server error'
-    }, { status: 500 })
+    const response: ApiResponse = {
+      success: false,
+      message: 'Failed to fetch toggle',
+      error: {
+        code: 'FETCH_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }
+    }
+    
+    return NextResponse.json(response, { status: 500 })
   }
 }

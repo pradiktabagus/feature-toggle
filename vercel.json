@@ -1,7 +1,22 @@
 {
   "functions": {
-    "app/api/**/*.ts": {
-      "maxDuration": 30
+    "src/app/api/public/toggles/[key]/route.ts": {
+      "maxDuration": 10
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/api/public/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300, s-maxage=300"
+        },
+        {
+          "key": "CDN-Cache-Control", 
+          "value": "max-age=300"
+        }
+      ]
+    }
+  ]
 }
