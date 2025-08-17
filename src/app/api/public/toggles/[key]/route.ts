@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/shared/lib/prisma'
-import { getToggleFile, uploadToggleFile, getPublicUrl } from '@/shared/lib/s3'
+import { getToggleFile, uploadToggleFile } from '@/shared/lib/s3'
 
 export async function GET(
   request: NextRequest,

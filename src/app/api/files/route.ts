@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '../auth/[...nextauth]/route'
+import { authOptions } from '@/shared/lib/auth'
 import { uploadToggleFile, getPublicUrl } from '@/shared/lib/s3'
 import { v4 as uuidv4 } from 'uuid'
 
