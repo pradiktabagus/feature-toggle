@@ -41,6 +41,47 @@ const authOptions: AuthOptions = {
     error: '/auth/error',
   },
   callbacks: {
+    signIn: async ({ user, account }) => {
+      try {
+        if (account && user.email) {
+          // Check if user with same email already exists
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email },
+            include: { accounts: true }
+          })
+          
+          if (existingUser && existingUser.id !== user.id) {
+            // Check if this provider is already linked
+            const hasProvider = existingUser.accounts.some(
+              acc => acc.provider === account.provider
+            )
+            
+            if (!hasProvider) {
+              // Link new provider to existing user
+              await prisma.account.create({
+                data: {
+                  userId: existingUser.id,
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  refresh_token: account.refresh_token,
+                  access_token: account.access_token,
+                  expires_at: account.expires_at,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                  session_state: account.session_state,
+                }
+              })
+            }
+          }
+        }
+        return true
+      } catch (error) {
+        console.error('SignIn error:', error)
+        return true // Allow sign in even if linking fails
+      }
+    },
     jwt: async ({ token, user }) => {
       if (user) {
         token.role = user.role || 'user'
