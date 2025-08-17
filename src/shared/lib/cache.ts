@@ -5,6 +5,7 @@ interface CacheItem<T> {
 }
 
 class InMemoryCache {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private cache = new Map<string, CacheItem<any>>()
   private defaultTTL = 5 * 60 * 1000 // 5 minutes
 
