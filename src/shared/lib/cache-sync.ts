@@ -1,5 +1,33 @@
 import { prisma } from './prisma'
 import { uploadToggleFile, deleteToggleFile } from './s3'
+import { CloudFrontClient, CreateInvalidationCommand } from '@aws-sdk/client-cloudfront'
+
+const cloudfront = new CloudFrontClient({
+  region: 'us-east-1',
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+})
+
+async function invalidateCloudFront(paths: string[]) {
+  if (!process.env.CLOUDFRONT_DISTRIBUTION_ID) return
+  
+  try {
+    await cloudfront.send(new CreateInvalidationCommand({
+      DistributionId: process.env.CLOUDFRONT_DISTRIBUTION_ID,
+      InvalidationBatch: {
+        Paths: {
+          Quantity: paths.length,
+          Items: paths,
+        },
+        CallerReference: `invalidation-${Date.now()}`,
+      },
+    }))
+  } catch (error) {
+    console.error('CloudFront invalidation failed:', error)
+  }
+}
 
 export async function syncToggleToCache(toggleKey: string) {
   try {
@@ -53,6 +81,9 @@ export async function syncToggleToCache(toggleKey: string) {
     }
 
     await uploadToggleFile(cacheKey, JSON.stringify(response))
+    
+    // Invalidate CloudFront cache
+    await invalidateCloudFront([`/api/public/toggles/${toggleKey}`])
   } catch (error) {
     console.error('Failed to sync toggle to cache:', error)
   }
@@ -62,6 +93,9 @@ export async function removeToggleFromCache(toggleKey: string) {
   try {
     const cacheKey = `public/toggles/${toggleKey}.json`
     await deleteToggleFile(cacheKey)
+    
+    // Invalidate CloudFront cache
+    await invalidateCloudFront([`/api/public/toggles/${toggleKey}`])
   } catch (error) {
     // File might not exist, ignore
   }
