@@ -138,6 +138,10 @@ export async function POST(request: NextRequest) {
       data: { updatedBy: user.id } as any
     })
 
+    // Auto export to S3
+    const { autoExportToggles } = await import('@/shared/lib/auto-export')
+    autoExportToggles(session.user.email).catch(console.error)
+
     const response: ApiResponse = {
       success: true,
       message: 'Toggle created successfully',

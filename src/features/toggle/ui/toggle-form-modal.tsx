@@ -168,12 +168,18 @@ export default function ToggleFormModal({ mode, open, data, onClose, onSubmit }:
             <Select
               value={form.getValues('type') || 'STRING'}
               onValueChange={(value) => {
+                const currentType = form.getValues('type')
                 form.setValue('type', value as 'STRING' | 'NUMBER' | 'BOOLEAN' | 'JSON')
+                
                 // Reset value when type changes
-                if (value === 'BOOLEAN') {
-                  form.setValue('value', 'false')
-                } else if (mode === 'create' || !data) {
-                  form.setValue('value', '')
+                if (currentType !== value) {
+                  if (value === 'BOOLEAN') {
+                    form.setValue('value', 'false')
+                  } else if (value === 'JSON') {
+                    form.setValue('value', '{}')
+                  } else {
+                    form.setValue('value', '')
+                  }
                 }
                 form.clearErrors('value')
               }}
