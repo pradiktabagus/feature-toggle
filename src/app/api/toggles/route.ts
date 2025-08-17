@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/shared/lib/prisma'
@@ -32,14 +33,25 @@ export async function GET(request: NextRequest) {
       prisma.toggle.count()
     ])
 
-    // Add fallback user for toggles without user relation
-    const toggles = rawToggles.map(toggle => ({
-      ...toggle,
-      user: toggle.user || {
-        name: 'System User',
-        email: 'system@feature-toggle.app'
-      }
-    }))
+    // Add updatedByUser data manually
+    const toggles = await Promise.all(
+      rawToggles.map(async (toggle) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const toggleWithUpdatedBy = toggle as any
+        let updatedByUser = null
+        if (toggleWithUpdatedBy.updatedBy) {
+          updatedByUser = await prisma.user.findUnique({
+            where: { id: toggleWithUpdatedBy.updatedBy },
+            select: { name: true, email: true }
+          })
+        }
+        return {
+          ...toggle,
+          updatedBy: toggleWithUpdatedBy.updatedBy,
+          updatedByUser
+        }
+      })
+    )
 
     const response: ApiResponse = {
       success: true,
@@ -109,7 +121,7 @@ export async function POST(request: NextRequest) {
         type: data.type as any,
         key: `${data.name.toLowerCase().replace(/\s+/g, '-')}-${uuidv4().slice(0, 8)}-${Date.now()}`,
         createdBy: user.id,
-      },
+      } as any,
       include: {
         user: {
           select: {
@@ -118,6 +130,12 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+    })
+    
+    // Set updatedBy same as createdBy for new toggle
+    await prisma.toggle.updateMany({
+      where: { id: toggle.id },
+      data: { updatedBy: user.id } as any
     })
 
     const response: ApiResponse = {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/shared/lib/prisma'
@@ -24,9 +25,17 @@ export async function PATCH(
 
     const { isActive } = await request.json()
     
+    // Get current user ID
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true }
+    })
+    
     const toggle = await prisma.toggle.update({
       where: { id: id },
-      data: { isActive },
+      data: { 
+        isActive,
+      } as any,
       include: {
         user: {
           select: {
@@ -36,6 +45,14 @@ export async function PATCH(
         },
       },
     })
+    
+    // Manually update updatedBy field
+    if (currentUser?.id) {
+      await prisma.toggle.updateMany({
+        where: { id: id },
+        data: { updatedBy: currentUser.id } as any
+      })
+    }
 
     const response: ApiResponse = {
       success: true,
@@ -124,6 +141,12 @@ export async function PUT(
 
     const data = await request.json()
     
+    // Get current user ID
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true }
+    })
+    
     const toggle = await prisma.toggle.update({
       where: { id: id },
       data: {
@@ -131,7 +154,7 @@ export async function PUT(
         description: data.description,
         value: data.value,
         type: data.type,
-      },
+      } as any,
       include: {
         user: {
           select: {
@@ -141,6 +164,15 @@ export async function PUT(
         },
       },
     })
+    
+    // Manually update updatedBy field
+    if (currentUser?.id) {
+      await prisma.toggle.updateMany({
+        where: { id: id },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data: { updatedBy: currentUser.id } as any
+      })
+    }
 
     const response: ApiResponse = {
       success: true,

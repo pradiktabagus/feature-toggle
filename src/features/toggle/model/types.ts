@@ -11,10 +11,15 @@ export type ToggleData = DataTableRow & {
   createdAt: string;
   updatedAt: string;
   createdBy: string;
+  updatedBy?: string | null;
   user: {
     name: string | null;
     email: string | null;
   };
+  updatedByUser?: {
+    name: string | null;
+    email: string | null;
+  } | null;
   update?: string; // Optional for backward compatibility
 };
 

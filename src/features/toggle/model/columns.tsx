@@ -151,9 +151,10 @@ export const createColumns = ({ onEdit, onDuplicate, onDelete }: ColumnsProps): 
         accessorKey: "update",
         header: "Last Update", 
         cell: ({ row }) => {
-            const { createdAt, updatedAt, user } = row.original;
+            const { createdAt, updatedAt, user, updatedByUser } = row.original;
             const isFirstTime = createdAt === updatedAt;
-            const userName = user?.name || user?.email || 'Unknown';
+            const lastUpdateUser = updatedByUser || user;
+            const userName = lastUpdateUser?.name || lastUpdateUser?.email || 'Unknown';
             
             return (
                 <div className="text-sm">
