@@ -1,5 +1,6 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { invalidateToggleCache, getCloudFrontUrl } from './cloudfront'
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION!,
@@ -19,7 +20,16 @@ export async function uploadToggleFile(key: string, content: string) {
     ContentType: 'application/json',
   })
   
-  return await s3Client.send(command)
+  const result = await s3Client.send(command)
+  
+  // Invalidate CloudFront cache
+  try {
+    await invalidateToggleCache(key)
+  } catch (error) {
+    console.warn('CloudFront invalidation failed:', error)
+  }
+  
+  return result
 }
 
 export async function getToggleFile(key: string) {
@@ -38,7 +48,16 @@ export async function deleteToggleFile(key: string) {
     Key: key,
   })
   
-  return await s3Client.send(command)
+  const result = await s3Client.send(command)
+  
+  // Invalidate CloudFront cache
+  try {
+    await invalidateToggleCache(key)
+  } catch (error) {
+    console.warn('CloudFront invalidation failed:', error)
+  }
+  
+  return result
 }
 
 export async function getPresignedUrl(key: string, expiresIn = 3600) {
@@ -48,4 +67,8 @@ export async function getPresignedUrl(key: string, expiresIn = 3600) {
   })
   
   return await getSignedUrl(s3Client, command, { expiresIn })
+}
+
+export function getPublicUrl(key: string): string {
+  return getCloudFrontUrl(key)
 }

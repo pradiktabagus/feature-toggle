@@ -138,6 +138,10 @@ export async function POST(request: NextRequest) {
       data: { updatedBy: user.id } as any
     })
 
+    // Sync to cache
+    const { syncToggleToCache } = await import('@/shared/lib/cache-sync')
+    syncToggleToCache(toggle.key).catch(console.error)
+
     // Auto export to S3
     const { autoExportToggles } = await import('@/shared/lib/auto-export')
     autoExportToggles(session.user.email).catch(console.error)

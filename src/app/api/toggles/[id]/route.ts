@@ -54,6 +54,10 @@ export async function PATCH(
       })
     }
 
+    // Sync to cache
+    const { syncToggleToCache } = await import('@/shared/lib/cache-sync')
+    syncToggleToCache(toggle.key).catch(console.error)
+
     // Auto export to S3
     const { autoExportToggles } = await import('@/shared/lib/auto-export')
     autoExportToggles(session.user.email).catch(console.error)
@@ -99,9 +103,21 @@ export async function DELETE(
       return NextResponse.json(response, { status: 401 })
     }
 
+    // Get toggle key before deletion
+    const toggleToDelete = await prisma.toggle.findUnique({
+      where: { id: id },
+      select: { key: true }
+    })
+
     await prisma.toggle.delete({
       where: { id: id }
     })
+
+    // Remove from cache
+    if (toggleToDelete) {
+      const { removeToggleFromCache } = await import('@/shared/lib/cache-sync')
+      removeToggleFromCache(toggleToDelete.key).catch(console.error)
+    }
 
     // Auto export to S3
     const { autoExportToggles } = await import('@/shared/lib/auto-export')
@@ -181,6 +197,10 @@ export async function PUT(
         data: { updatedBy: currentUser.id } as any
       })
     }
+
+    // Sync to cache
+    const { syncToggleToCache } = await import('@/shared/lib/cache-sync')
+    syncToggleToCache(toggle.key).catch(console.error)
 
     // Auto export to S3
     const { autoExportToggles } = await import('@/shared/lib/auto-export')
