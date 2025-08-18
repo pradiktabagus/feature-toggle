@@ -1,0 +1,60 @@
+name: Project Automation
+
+on:
+  issues:
+    types: [opened, labeled, assigned]
+  pull_request:
+    types: [opened, ready_for_review, closed]
+
+jobs:
+  add-to-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add issue to project
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: https://github.com/users/pradiktabagus/projects/5
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add PR to project
+        if: github.event_name == 'pull_request' && github.event.action == 'opened'
+        uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: https://github.com/users/pradiktabagus/projects/5
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  auto-assign-labels:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    steps:
+      - name: Auto-assign phase labels
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+            
+            // Extract phase from issue body
+            const phaseMatch = body.match(/\*\*Phase:\*\*\s*\(?(Phase\s*[2-5])/i);
+            if (phaseMatch) {
+              const phase = phaseMatch[1].toLowerCase().replace(/\s+/g, '-');
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: [phase]
+              });
+            }
+            
+            // Extract priority from issue body
+            const priorityMatch = body.match(/\*\*Priority:\*\*\s*\(?(High|Medium|Low)/i);
+            if (priorityMatch) {
+              const priority = priorityMatch[1].toLowerCase();
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: [`priority-${priority}`]
+              });
+            }
