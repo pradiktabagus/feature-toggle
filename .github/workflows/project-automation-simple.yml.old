@@ -1,0 +1,86 @@
+name: Project Automation
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  auto-assign-labels:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    steps:
+      - name: Auto-assign phase labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = github.context.payload.issue;
+            const body = issue.body || '';
+            
+            console.log('Processing issue:', issue.number);
+            console.log('Issue body:', body);
+            
+            // Extract phase from issue body
+            const phaseMatch = body.match(/\*\*Phase:\*\*\s*\(?(Phase\s*[2-5])/i);
+            if (phaseMatch) {
+              const phase = phaseMatch[1].toLowerCase().replace(/\s+/g, '-');
+              console.log('Found phase:', phase);
+              try {
+                await github.rest.issues.addLabels({
+                  owner: github.context.repo.owner,
+                  repo: github.context.repo.repo,
+                  issue_number: issue.number,
+                  labels: [phase]
+                });
+                console.log('Added phase label:', phase);
+              } catch (error) {
+                console.log('Error adding phase label:', error.message);
+              }
+            }
+            
+            // Extract priority from issue body
+            const priorityMatch = body.match(/\*\*Priority:\*\*\s*\(?(High|Medium|Low)/i);
+            if (priorityMatch) {
+              const priority = priorityMatch[1].toLowerCase();
+              console.log('Found priority:', priority);
+              try {
+                await github.rest.issues.addLabels({
+                  owner: github.context.repo.owner,
+                  repo: github.context.repo.repo,
+                  issue_number: issue.number,
+                  labels: [`priority-${priority}`]
+                });
+                console.log('Added priority label:', `priority-${priority}`);
+              } catch (error) {
+                console.log('Error adding priority label:', error.message);
+              }
+            }
+
+  notify-project:
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'issues' && github.event.action == 'opened') || (github.event_name == 'pull_request' && github.event.action == 'opened')
+    steps:
+      - name: Comment with project link
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const projectUrl = 'https://github.com/users/pradiktabagus/projects/5';
+            const itemType = github.context.eventName === 'issues' ? 'issue' : 'pull request';
+            const message = `🚀 This ${itemType} has been created! Please add it to the [project board](${projectUrl}) manually.`;
+            
+            if (github.context.eventName === 'issues') {
+              await github.rest.issues.createComment({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                issue_number: github.context.payload.issue.number,
+                body: message
+              });
+            } else if (github.context.eventName === 'pull_request') {
+              await github.rest.issues.createComment({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                issue_number: github.context.payload.pull_request.number,
+                body: message
+              });
+            }
