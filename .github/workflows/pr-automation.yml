@@ -19,20 +19,7 @@ jobs:
             
             // Add project board comment
             const projectUrl = 'https://github.com/users/pradiktabagus/projects/5';
-            const message = `🚀 This pull request has been created! Please add it to the [project board](${projectUrl}) manually.
-            
-**PR Details:**
-- Branch: \`${pr.head.ref}\`
-- Base: \`${pr.base.ref}\`
-- Files changed: ${pr.changed_files}
-- Additions: +${pr.additions}
-- Deletions: -${pr.deletions}
-
-**Next steps:**
-1. Add to project board "In Progress" column
-2. Request code review
-3. Link to related issue if applicable
-4. Ensure all checks pass before merge`;
+            const message = `🚀 This pull request has been created! Please add it to the [project board](${projectUrl}) manually.\n\n**PR Details:**\n- Branch: \`${pr.head.ref}\`\n- Base: \`${pr.base.ref}\`\n- Files changed: ${pr.changed_files}\n- Additions: +${pr.additions}\n- Deletions: -${pr.deletions}\n\n**Next steps:**\n1. Add to project board "In Progress" column\n2. Request code review\n3. Link to related issue if applicable\n4. Ensure all checks pass before merge`;
             
             try {
               await github.rest.issues.createComment({

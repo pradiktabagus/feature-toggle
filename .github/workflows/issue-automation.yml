@@ -89,15 +89,8 @@ jobs:
             
             // Add project board comment
             const projectUrl = 'https://github.com/users/pradiktabagus/projects/5';
-            const message = `🚀 This issue has been created! Please add it to the [project board](${projectUrl}) manually.
-            
-**Auto-detected:**
-${labelsToAdd.length > 0 ? `- Labels: ${labelsToAdd.join(', ')}` : '- No labels detected'}
-
-**Next steps:**
-1. Add to project board
-2. Move to appropriate column (Todo/In Progress)
-3. Assign to milestone if applicable`;
+            const labelsText = labelsToAdd.length > 0 ? `- Labels: ${labelsToAdd.join(', ')}` : '- No labels detected';
+            const message = `🚀 This issue has been created! Please add it to the [project board](${projectUrl}) manually.\n\n**Auto-detected:**\n${labelsText}\n\n**Next steps:**\n1. Add to project board\n2. Move to appropriate column (Todo/In Progress)\n3. Assign to milestone if applicable`;
             
             try {
               await github.rest.issues.createComment({
