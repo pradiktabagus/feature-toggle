@@ -243,10 +243,31 @@ Every week, review:
 
 ## 🚀 Getting Started
 
+⚠️ **Important**: If you're getting GitHub Actions errors, follow the [Detailed Setup Guide](./GITHUB_PROJECT_SETUP.md) first.
+
+### Quick Setup:
 1. **Set up GitHub Project** with columns and labels
 2. **Create Phase 2 milestone** with target date
 3. **Create initial issues** for rollout features
 4. **Assign team members** to issues
 5. **Start first sprint** with rollout entity
 
+### Recommended Approach:
+1. **Manual Setup First**: Use [GITHUB_PROJECT_SETUP.md](./GITHUB_PROJECT_SETUP.md) for step-by-step instructions
+2. **Add Automation Later**: Once comfortable with the workflow
+
 This setup will provide a solid foundation for managing the Feature Toggle project development using GitHub's native tools while following our established blueprint and FSD architecture principles.
+
+## 🔧 Troubleshooting
+
+If you encounter the error:
+```
+Error: Request failed due to following response errors:
+ - Could not resolve to a ProjectV2 with the number 1.
+```
+
+This means the GitHub Project hasn't been created yet. Follow these steps:
+1. Read [GITHUB_PROJECT_SETUP.md](./GITHUB_PROJECT_SETUP.md)
+2. Create the GitHub Project first
+3. Configure the automation (or use manual workflow)
+4. Then create issues using the templates
